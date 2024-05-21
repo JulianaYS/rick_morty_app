@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:rick_morty_app/models/character.dart';
+import 'package:rick_morty_app/services/character_service.dart';
 
 class CharacterListScreen extends StatelessWidget{
 
@@ -25,9 +26,24 @@ class CharacterList extends StatefulWidget {
 }
 
 class _CharacterListState extends State<CharacterList> {
-  final List _characters = [];
+  List _characters = [];
   //listagenerica que puede tener cualquier tipo de dato
   //_ private
+  final CharacterService _characterService = CharacterService();
+
+  initialize() async {
+    _characters = await _characterService.getAll();
+    setState(() {
+      _characters = _characters;
+    });
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    initialize();
+  }
+
   @override
   Widget build(BuildContext context) {
     return GridView.builder(
