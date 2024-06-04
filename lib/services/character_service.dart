@@ -14,10 +14,7 @@ class CharacterService{
       final Map<String, dynamic> responseMap = json.decode(response.body);
       List maps = responseMap['results'];
       return maps.map((map) => Character.fromJson(map)).toList();
-
     }
     return [];
   }
-
-
 }

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:infinite_scroll_pagination/infinite_scroll_pagination.dart';
 import 'package:rick_morty_app/models/character.dart';
 import 'package:rick_morty_app/services/character_service.dart';
 
@@ -26,44 +27,56 @@ class CharacterList extends StatefulWidget {
 }
 
 class _CharacterListState extends State<CharacterList> {
-  List _characters = [];
+  //List _characters = [];
   //listagenerica que puede tener cualquier tipo de dato
   //_ private
   final CharacterService _characterService = CharacterService();
 
   static const _pageSize = 20; //# de elementos que se muestran por paginas
 
-  //final PagingController<int, Character> _pagingController =
-  //    PagingController(firstPageKey: 1); //inicializa en pagina 1
+  final PagingController<int, Character> _pagingController = //q pagina se mostrara y q elementos
+      PagingController(firstPageKey: 1); //inicializa en pagina 1
 
-  void initialize() async {
-    _characters = await _characterService.getAll(1);
-    setState(() {
-      _characters = _characters;
-    });
-  }
-
+  //cada vez q detecta una nueva pagina invoca este metodo
   @override
-  void initState() {
+  void initState() { //se invc cuando se crea el estado
+    _pagingController.addPageRequestListener((pageKey) {
+      _fetchPage(pageKey); //_ privado
+    });
     super.initState();
-    initialize();
   }
 
-  
+  //trae la nueva pagina
+  Future<void> _fetchPage(int pageKey) async { 
+    try {
+      final newItems = await _characterService.getAll(pageKey); //jala del api
+      final isLastPage = newItems.length < _pageSize;
+      if (isLastPage) {
+        _pagingController.appendLastPage(newItems as List<Character>); //se castea
+      } else {
+        final nextPageKey = pageKey + 1;
+        _pagingController.appendPage(newItems as List<Character>, nextPageKey);
+      }
+    } catch (error) {
+      _pagingController.error = error;
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
-    return GridView.builder(
-      itemCount: _characters.length,
+    return PagedGridView<int, Character>(
+      pagingController: _pagingController, 
+      builderDelegate: PagedChildBuilderDelegate(
+        itemBuilder: (context, item, index){
+          return CharacterItem(character: item);
+        }
+      ), 
       gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
         crossAxisCount: 3,
         mainAxisSpacing: 8.0,
-        crossAxisSpacing: 8.0
-        ), 
-      itemBuilder: (context, index) {
-        return CharacterItem(character: _characters[index]);
-      },
-    );
+        crossAxisSpacing: 8.0,
+      ),
+    ); 
   }
 }
 
