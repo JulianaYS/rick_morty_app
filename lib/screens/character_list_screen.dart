@@ -78,6 +78,13 @@ class _CharacterListState extends State<CharacterList> {
       ),
     ); 
   }
+
+  //libera el espacio q usa el pagingcontroller
+  @override
+  void dispose() {
+    _pagingController.dispose();
+    super.dispose();
+  }
 }
 
 class CharacterItem extends StatelessWidget {
