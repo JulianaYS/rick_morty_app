@@ -31,8 +31,13 @@ class _CharacterListState extends State<CharacterList> {
   //_ private
   final CharacterService _characterService = CharacterService();
 
-  initialize() async {
-    _characters = await _characterService.getAll();
+  static const _pageSize = 20; //# de elementos que se muestran por paginas
+
+  //final PagingController<int, Character> _pagingController =
+  //    PagingController(firstPageKey: 1); //inicializa en pagina 1
+
+  void initialize() async {
+    _characters = await _characterService.getAll(1);
     setState(() {
       _characters = _characters;
     });
@@ -43,6 +48,8 @@ class _CharacterListState extends State<CharacterList> {
     super.initState();
     initialize();
   }
+
+  
 
   @override
   Widget build(BuildContext context) {
@@ -67,16 +74,30 @@ class CharacterItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    //final height = MediaQuery.
     return Card(
+      color: (character.status == "Alive")? Colors.green:Colors.red ,
       child: Column(
         children: [
-          Image.network(character.image),
-          Text(character.name),
-          Text(character.status),
-          Text(character.species),
-          Text(character.gender),
+          Expanded(
+            child: Padding(
+              padding: const EdgeInsets.all(2.0),
+              child: Image.network(
+                character.image,
+              ),
+            ),
+          ),
+          Text(
+            character.name, 
+            maxLines: 1,
+            style: const TextStyle(color: Colors.white),
+          ),
+          Text(
+            character.species,
+            style: const TextStyle(color: Colors.white),
+          ),
         ]
-      )
+      ),
     );
   }
 }
