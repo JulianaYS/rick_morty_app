@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:infinite_scroll_pagination/infinite_scroll_pagination.dart';
+import 'package:rick_morty_app/dao/character_dao.dart';
 import 'package:rick_morty_app/models/character.dart';
+import 'package:rick_morty_app/screens/character_detail_screen.dart';
 import 'package:rick_morty_app/services/character_service.dart';
 
 class CharacterListScreen extends StatelessWidget{
@@ -12,9 +14,9 @@ class CharacterListScreen extends StatelessWidget{
     return Scaffold(
       appBar: AppBar(
         centerTitle: true,
-        title: const Text('Rick & Morty'),
+        title: const Text('Rick & Morty', style: TextStyle(fontWeight: FontWeight.bold)),
       ),
-      body: CharacterList(),
+      body: const CharacterList(),
     );
   }
 }
@@ -73,8 +75,9 @@ class _CharacterListState extends State<CharacterList> {
       ), 
       gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
         crossAxisCount: 3,
-        mainAxisSpacing: 8.0,
-        crossAxisSpacing: 8.0,
+        mainAxisSpacing: 5.0,
+        crossAxisSpacing: 5.0,
+        childAspectRatio: 0.6
       ),
     ); 
   }
@@ -87,37 +90,78 @@ class _CharacterListState extends State<CharacterList> {
   }
 }
 
-class CharacterItem extends StatelessWidget {
+class CharacterItem extends StatefulWidget {
   final Character character;
   //dynamic
   const CharacterItem({super.key, required this.character});
 
   @override
+  State<CharacterItem> createState() => _CharacterItemState();
+}
+
+class _CharacterItemState extends State<CharacterItem> {
+  bool _isFavorite = false;
+  final CharacterDao _characterDao = CharacterDao();
+
+  @override
   Widget build(BuildContext context) {
-    //final height = MediaQuery.
-    return Card(
-      color: (character.status == "Alive")? Colors.green:Colors.red ,
-      child: Column(
-        children: [
-          Expanded(
-            child: Padding(
-              padding: const EdgeInsets.all(2.0),
-              child: Image.network(
-                character.image,
+    _characterDao.isFavorite(widget.character).then(
+      (value) {
+        if(mounted){
+          setState(() {
+            _isFavorite = value;
+          });
+        }
+      }
+    );
+
+    return InkWell(
+      onTap: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => CharacterDetailsScreen(character: widget.character),
+          ),
+        );
+      },
+      child: Card(
+        color: (widget.character.status == "Alive")? Colors.green:Colors.red ,
+        child: Column(
+          children: [
+            Expanded(
+              child: Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: Image.network(
+                  widget.character.image,
+                ),
               ),
             ),
-          ),
-          Text(
-            character.name, 
-            maxLines: 1,
-            style: const TextStyle(color: Colors.white),
-          ),
-          Text(
-            character.species,
-            style: const TextStyle(color: Colors.white),
-          ),
-        ]
-      ),
+            Text(
+              widget.character.name, 
+              maxLines: 1,
+              style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+            ),
+            Text(
+              widget.character.species,
+              style: const TextStyle(color: Color.fromARGB(255, 0, 0, 0)),
+            ),
+            IconButton(
+              onPressed: () {
+                setState(() {
+                  _isFavorite = !_isFavorite;
+                });
+
+                _isFavorite
+                  ? _characterDao.insert(widget.character)               
+                  : _characterDao.delete(widget.character);
+              },
+              icon: Icon(_isFavorite? Icons.favorite:Icons.favorite_border,
+                color: _isFavorite? Colors.purple:Colors.black,
+              ),
+            )
+          ]
+        ),
+      )
     );
   }
 }
